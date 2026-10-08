@@ -1,0 +1,385 @@
+/* ─── Report Layout ────────────────────────────────────────── */
+.report-layout {
+  min-height: 100vh;
+  background-color: var(--bg-base);
+  padding-bottom: var(--space-16);
+}
+
+.report-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4) var(--space-6);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--bg-overlay);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--space-8);
+}
+
+.report-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+  animation: fadeInUp var(--duration-slow) var(--ease-out-expo) both;
+}
+
+/* ─── Document Container ─────────────────────────────────── */
+.report-document {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  position: relative;
+}
+
+/* ─── Cover ──────────────────────────────────────────────── */
+.report-cover {
+  position: relative;
+  padding: 5rem 4rem;
+  text-align: center;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.cover-bg-glow {
+  position: absolute;
+  top: -50%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 200%;
+  background: radial-gradient(ellipse at center, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.cover-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  border: 1px solid var(--border-accent);
+  border-radius: 50%;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-primary);
+  position: relative;
+  z-index: 1;
+}
+
+.cover-title {
+  font-size: 2.75rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+  position: relative;
+  z-index: 1;
+}
+
+.cover-company {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.cover-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Body ───────────────────────────────────────────────── */
+.report-body {
+  padding: 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3.5rem;
+}
+
+.report-section {
+  position: relative;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-hover);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-primary);
+}
+
+.report-summary-callout {
+  padding: 2rem;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-accent);
+  box-shadow: 0 0 20px var(--primary-glow) inset;
+}
+.report-summary-callout .section-title {
+  border-bottom-color: rgba(139, 92, 246, 0.3);
+}
+
+/* ─── Grids & Metrics ────────────────────────────────────── */
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.grid-cell {
+  background: var(--bg-card);
+  padding: 1.5rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+.grid-cell.full-width {
+  grid-column: 1 / -1;
+}
+
+.cell-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.metric-card {
+  background: var(--bg-elevated);
+  padding: 1.25rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.metric-name {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.metric-values {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px dashed var(--border-hover);
+}
+
+.metric-val-label {
+  display: block;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.metric-val-data {
+  font-size: 1.125rem;
+}
+
+.metric-interpretation {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* ─── Risks ──────────────────────────────────────────────── */
+.risk-row {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.risk-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.risk-indicator.critical { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+.risk-indicator.high     { background: #F97316; box-shadow: 0 0 8px #F97316; }
+.risk-indicator.medium   { background: var(--warning); }
+.risk-indicator.low      { background: var(--success); }
+
+.risk-content {
+  flex: 1;
+}
+
+/* ─── Indicators ─────────────────────────────────────────── */
+.indicator-panel {
+  padding: 1.5rem;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+}
+
+.indicator-panel.positive {
+  background: var(--success-soft);
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+.indicator-panel.warning {
+  background: var(--warning-soft);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.indicator-list {
+  padding-left: 1.25rem;
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+}
+.indicator-list li { margin-bottom: 0.5rem; }
+
+/* ─── Conclusion ─────────────────────────────────────────── */
+.conclusion-panel {
+  padding: 2rem;
+  background: linear-gradient(180deg, var(--bg-card), var(--bg-base));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+/* ─── Footer ─────────────────────────────────────────────── */
+.report-footer {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.report-footer p {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: center;
+  max-width: 80%;
+}
+
+.watermark {
+  font-size: 0.875rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--border-hover);
+}
+
+/* ─── Responsive ─────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .report-cover { padding: 3rem 2rem; }
+  .report-body { padding: 2rem; gap: 2.5rem; }
+  .report-grid { grid-template-columns: 1fr; }
+  .cover-title { font-size: 2rem; }
+}
+
+@media (max-width: 480px) {
+  .report-body { padding: 1.5rem; }
+}
+
+/* ─── Print Styles ───────────────────────────────────────── */
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+  
+  .report-layout {
+    padding: 0;
+    background: white;
+  }
+  
+  .report-nav {
+    display: none !important;
+  }
+  
+  .report-container {
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+    animation: none;
+  }
+  
+  .report-document {
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    background: white;
+  }
+  
+  .report-cover {
+    background: white;
+    color: black;
+    border-bottom: 2px solid black;
+    padding: 2rem 0;
+  }
+  
+  .cover-title, .cover-company, .section-title, .report-summary-callout, .cell-title, .metric-name {
+    color: black !important;
+  }
+  
+  .cover-bg-glow, .cover-icon {
+    display: none;
+  }
+  
+  .badge-neutral {
+    background: transparent;
+    color: black;
+    border: 1px solid #ccc;
+  }
+  
+  .report-body {
+    padding: 2rem 0;
+    gap: 2rem;
+  }
+  
+  .report-summary-callout, .grid-cell, .metric-card, .risk-row, .conclusion-panel {
+    background: white;
+    border: 1px solid #ccc;
+    box-shadow: none;
+    color: black;
+  }
+  
+  .indicator-panel.positive { background: #f0fdf4; border-color: #bbf7d0; color: black; }
+  .indicator-panel.warning { background: #fffbeb; border-color: #fef3c7; color: black; }
+  
+  .text-primary, .text-secondary, .text-muted {
+    color: black !important;
+  }
+  
+  .watermark {
+    color: #ccc;
+  }
+  
+  /* Avoid breaking elements */
+  .report-section, .grid-cell, .metric-card, .risk-row {
+    page-break-inside: avoid;
+  }
+}

@@ -1,0 +1,22 @@
+backend/venv/
+backend/.venv/
+venv/
+.venv/
+
+__pycache__/
+*.pyc
+
+.env
+.env.*
+
+node_modules/
+dist/
+build/
+
+.vscode/
+.idea/
+
+.ipynb_checkpoints/
+
+# ChromaDB generated data
+backend/data/chroma/
