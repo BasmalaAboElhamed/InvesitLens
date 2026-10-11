@@ -1,13 +1,20 @@
-# InvestiLens 🔎📈
+# 🔎 InvestiLens — Financial Report RAG Platform
 
-**AI-powered investor intelligence platform: upload annual reports, get cited answers and structured research reports, all running locally.**
+> An evidence-grounded, local-first investor intelligence platform: upload annual reports, get cited answers and structured research reports, all running on your own machine.
+
+![Python](https://img.shields.io/badge/Python-3.10+-0a7bbb?style=flat-square)
+![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=flat-square)
+![React](https://img.shields.io/badge/Frontend-React_18-61dafb?style=flat-square)
+![VectorDB](https://img.shields.io/badge/VectorDB-ChromaDB-8e1b8e?style=flat-square)
+![LLM](https://img.shields.io/badge/LLM-Ollama_qwen2.5:7b-f57c00?style=flat-square)
+![Embeddings](https://img.shields.io/badge/Embeddings-BGE_base_v1.5-yellow?style=flat-square)
+![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
 InvestiLens turns long financial PDFs (annual reports, 10-Ks) into something you can interrogate. It indexes each document with a **Retrieval-Augmented Generation (RAG)** pipeline, then uses a **local LLM (Ollama)** to produce a multi-stage company analysis, a synthesized intelligence report, and a chat assistant whose answers are backed by **verifiable citations (document, page, quote)**.
 
 Nothing leaves your machine: embeddings run on CPU through Hugging Face, the vector store is a local ChromaDB, and the language model is served by Ollama.
 
 ---
-
 ## Table of Contents
 
 1. [Key Features](#-key-features)
