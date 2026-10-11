@@ -15,6 +15,43 @@ from app.llm import chains
 router = APIRouter()
 
 
+def _normalize(text: str) -> str:
+    """Lowercase and collapse whitespace/quotes so quotes can be compared loosely."""
+    return " ".join((text or "").lower().replace('"', " ").replace("\u201c", " ").replace("\u201d", " ").split())
+
+
+def _ground_evidence(llm_evidence, chunks):
+    """
+    Keep only LLM-cited evidence that really comes from a retrieved chunk, and take
+    document name, page and section from that chunk's metadata (never from the LLM,
+    which can invent names such as "Apple_2025_10-K" or wrong page numbers).
+    """
+    grounded = []
+    for item in llm_evidence or []:
+        quote = _normalize(item.text)
+        if not quote:
+            continue
+        quote_words = set(quote.split())
+        best_chunk, best_score = None, 0.0
+        for chunk in chunks:
+            chunk_text = _normalize(chunk.get("text", ""))
+            if quote in chunk_text:
+                best_chunk, best_score = chunk, 1.0
+                break
+            overlap = len(quote_words & set(chunk_text.split())) / len(quote_words)
+            if overlap > best_score:
+                best_chunk, best_score = chunk, overlap
+        if best_chunk is not None and best_score >= 0.7:
+            metadata = best_chunk.get("metadata", {})
+            grounded.append(EvidenceSource(
+                document=metadata.get("document_name", "Unknown"),
+                page=metadata.get("page"),
+                section=metadata.get("section", "General"),
+                text=item.text,
+            ))
+    return grounded
+
+
 @router.post("/", response_model=ChatResponse)
 def chat_with_documents(request: ChatRequest):
     """
@@ -83,8 +120,9 @@ def chat_with_documents(request: ChatRequest):
         
         # Ensure we return the intent and our formatted evidence if the LLM missed it
         response.intent = intent
-        if not response.evidence:
-            response.evidence = evidence
+        # LLM-written citations are verified against the retrieved chunks; if none
+        # survive, fall back to the retrieved sources themselves.
+        response.evidence = _ground_evidence(response.evidence, chunks) or evidence
             
         return response
         
