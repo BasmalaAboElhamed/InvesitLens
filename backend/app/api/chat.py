@@ -16,7 +16,7 @@ router = APIRouter()
 
 
 @router.post("/", response_model=ChatResponse)
-async def chat_with_documents(request: ChatRequest):
+def chat_with_documents(request: ChatRequest):
     """
     Interactive Q&A against company documents.
     """

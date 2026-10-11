@@ -76,7 +76,7 @@ const Navbar = () => {
           <Link
             to="/reports"
             id="nav-reports"
-            className={`nav-link${isActive('/reports') ? ' active' : ''}`}
+            className={`nav-link${isActive('/report') ? ' active' : ''}`}
           >
             <FileBarChart size={15} strokeWidth={2} />
             <span>Reports</span>

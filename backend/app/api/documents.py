@@ -29,7 +29,7 @@ def get_company_documents(company_id: str):
     return db_service.get_documents_for_company(company_id)
 
 
-async def process_document_bg(document_id: str, file_path: str, company_name: str, year: int, doc_name: str, doc_type: str):
+def process_document_bg(document_id: str, file_path: str, company_name: str, year: int, doc_name: str, doc_type: str):
     """Background task to run the ingestion pipeline."""
     try:
         db_service.update_document(document_id, {"status": "processing"})
@@ -62,7 +62,7 @@ async def process_document_bg(document_id: str, file_path: str, company_name: st
 
 
 @router.post("/upload", response_model=Document)
-async def upload_document(
+def upload_document(
     background_tasks: BackgroundTasks,
     company_id: str = Form(...),
     document_name: str = Form(...),

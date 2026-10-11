@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FileText, ArrowLeft, Download, AlertTriangle, TrendingUp, DollarSign, Sparkles, Building2 } from 'lucide-react';
 import { reportService, companyService } from '../services/api';
+import { parseServerDate } from '../utils/useAllAnalyses';
 import './ReportPage.css';
 
 const ReportPage = () => {
@@ -9,6 +10,7 @@ const ReportPage = () => {
   const [report, setReport] = useState(null);
   const [company, setCompany] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     fetchReport();
@@ -26,6 +28,8 @@ const ReportPage = () => {
       
     } catch (error) {
       console.error("Failed to fetch report", error);
+      // Show the server's real reason instead of a generic message
+      setErrorMessage(error.response?.data?.detail || error.message || '');
     } finally {
       setLoading(false);
     }
@@ -45,6 +49,11 @@ const ReportPage = () => {
       </div>
       <h2 className="text-2xl font-bold mb-2">Report Not Found</h2>
       <p className="text-muted mb-6">The requested intelligence report could not be loaded.</p>
+      {errorMessage && (
+        <p className="text-muted mb-6" style={{ maxWidth: 560, fontSize: '0.8125rem', wordBreak: 'break-word' }}>
+          {errorMessage}
+        </p>
+      )}
       <Link to="/" className="btn btn-primary">Return to Dashboard</Link>
     </div>
   );
@@ -82,7 +91,7 @@ const ReportPage = () => {
             <h2 className="cover-company">{report.company}</h2>
             <div className="cover-meta">
               {report.period && <span className="badge badge-neutral">Period: {report.period}</span>}
-              <span className="badge badge-neutral">Generated: {new Date().toLocaleDateString()}</span>
+              <span className="badge badge-neutral">Generated: {(parseServerDate(report.generated_at) || new Date()).toLocaleDateString()}</span>
             </div>
           </header>
 

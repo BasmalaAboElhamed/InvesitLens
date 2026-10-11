@@ -6,6 +6,15 @@ All prompts enforce evidence grounding and structured output.
 """
 
 from langchain_core.prompts import PromptTemplate
+
+# How to read this file:
+#   - Every prompt = BASE_SYSTEM (shared rules) + a task-specific template.
+#   - {placeholders} such as {company} and {context} are filled in by LangChain.
+#   - Literal JSON braces are doubled ({{ and }}) so LangChain does not treat
+#     them as placeholders.
+#   - Prompt wording is intentionally untouched: changing even one word can
+#     change the model's output.
+
 # ─────────────────────────────────────────────────────────
 # Base System Instruction
 # ─────────────────────────────────────────────────────────

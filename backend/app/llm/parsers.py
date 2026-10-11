@@ -13,36 +13,55 @@ from app.core.logging import logger
 
 T = TypeVar("T", bound=BaseModel)
 
+# Marker meaning "this text is not valid JSON" (None can't be used, because
+# the JSON text "null" is valid and parses to None).
+_NOT_JSON = object()
+
+# ```json ... ```  (the "json" label is optional)
+CODE_BLOCK_PATTERN = r'```(?:json)?\s*\n?(.*?)\n?```'
+# Everything from the first "{" to the last "}"
+JSON_OBJECT_PATTERN = r'\{.*\}'
+
+
+def _try_json_loads(text: str):
+    """Parse `text` as JSON, returning _NOT_JSON if it is invalid."""
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        return _NOT_JSON
+
 
 def extract_json_from_response(text: str) -> Optional[dict]:
     """
     Extract JSON object from LLM response text.
     Handles responses that include markdown code blocks or extra text.
+
+    Tries three strategies, in order:
+        1. The whole response is JSON
+        2. The JSON is inside a ```json code block
+        3. The JSON is the part between the first "{" and the last "}"
     """
     if not text:
         return None
 
-    # Try direct JSON parse first
-    try:
-        return json.loads(text.strip())
-    except json.JSONDecodeError:
-        pass
+    # Strategy 1: the whole response is JSON
+    parsed = _try_json_loads(text.strip())
+    if parsed is not _NOT_JSON:
+        return parsed
 
-    # Try to extract from markdown code block
-    code_block_match = re.search(r'```(?:json)?\s*\n?(.*?)\n?```', text, re.DOTALL)
+    # Strategy 2: JSON inside a markdown code block
+    code_block_match = re.search(CODE_BLOCK_PATTERN, text, re.DOTALL)
     if code_block_match:
-        try:
-            return json.loads(code_block_match.group(1).strip())
-        except json.JSONDecodeError:
-            pass
+        parsed = _try_json_loads(code_block_match.group(1).strip())
+        if parsed is not _NOT_JSON:
+            return parsed
 
-    # Try to find JSON object in the text
-    brace_match = re.search(r'\{.*\}', text, re.DOTALL)
+    # Strategy 3: JSON object embedded in surrounding text
+    brace_match = re.search(JSON_OBJECT_PATTERN, text, re.DOTALL)
     if brace_match:
-        try:
-            return json.loads(brace_match.group(0))
-        except json.JSONDecodeError:
-            pass
+        parsed = _try_json_loads(brace_match.group(0))
+        if parsed is not _NOT_JSON:
+            return parsed
 
     logger.warning(f"Failed to extract JSON from response: {text[:200]}...")
     return None
@@ -71,17 +90,13 @@ def parse_response(text: str, model_class: Type[T]) -> Optional[T]:
         return instance
     except Exception as e:
         logger.error(f"Validation error for {model_class.__name__}: {e}")
-        # Try partial parse - fill in what we can
-        try:
-            instance = model_class.model_validate(data)
-            return instance
-        except Exception:
-            return None
+        return None
 
 
 def parse_response_or_default(text: str, model_class: Type[T], **defaults) -> T:
     """
-    Parse LLM response or return a default instance.
+    Parse LLM response or return a default instance
+    built from `defaults` (e.g. company name).
     """
     result = parse_response(text, model_class)
     if result is not None:

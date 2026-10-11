@@ -4,6 +4,8 @@ import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
 import CompanyWorkspace from './pages/CompanyWorkspace';
 import ReportPage from './pages/ReportPage';
+import AnalysisPage from './pages/AnalysisPage';
+import ReportsPage from './pages/ReportsPage';
 
 function App() {
   return (
@@ -14,6 +16,8 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/company/:companyId/*" element={<CompanyWorkspace />} />
+            <Route path="/analysis" element={<AnalysisPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
             <Route path="/report/:analysisId" element={<ReportPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

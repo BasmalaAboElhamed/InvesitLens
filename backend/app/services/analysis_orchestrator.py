@@ -48,7 +48,10 @@ async def run_analysis_pipeline(analysis_id: str, company_name: str, years: List
             f"{company_name} management outlook, future expectations"
         ]
 
-        chunks = retrieve_for_analysis(
+        # Blocking steps run in a worker thread (asyncio.to_thread) so the server
+        # keeps answering other requests (dashboard, reports...) while they run.
+        chunks = await asyncio.to_thread(
+            retrieve_for_analysis,
             queries=broad_queries,
             company=company_name,
             years=years,
@@ -68,7 +71,7 @@ async def run_analysis_pipeline(analysis_id: str, company_name: str, years: List
         # Step 3: Company Analysis
         # Yield to event loop between heavy calls
         await asyncio.sleep(0.1)
-        company_analysis = chains.run_company_analysis(company_name, context)
+        company_analysis = await asyncio.to_thread(chains.run_company_analysis, company_name, context)
 
         db_service.update_analysis(analysis_id, {
             "company_analysis": company_analysis,
@@ -78,7 +81,7 @@ async def run_analysis_pipeline(analysis_id: str, company_name: str, years: List
 
         # Step 4: Financial Analysis
         await asyncio.sleep(0.1)
-        financial_analysis = chains.run_financial_analysis(company_name, context)
+        financial_analysis = await asyncio.to_thread(chains.run_financial_analysis, company_name, context)
 
         db_service.update_analysis(analysis_id, {
             "financial_analysis": financial_analysis.model_dump(),
@@ -88,7 +91,7 @@ async def run_analysis_pipeline(analysis_id: str, company_name: str, years: List
 
         # Step 5: Risk Analysis
         await asyncio.sleep(0.1)
-        risk_analysis = chains.run_risk_analysis(company_name, context)
+        risk_analysis = await asyncio.to_thread(chains.run_risk_analysis, company_name, context)
 
         db_service.update_analysis(analysis_id, {
             "risk_analysis": risk_analysis.model_dump(),
@@ -98,7 +101,7 @@ async def run_analysis_pipeline(analysis_id: str, company_name: str, years: List
 
         # Step 6: Strategy Analysis
         await asyncio.sleep(0.1)
-        strategy_analysis = chains.run_strategy_analysis(company_name, context)
+        strategy_analysis = await asyncio.to_thread(chains.run_strategy_analysis, company_name, context)
 
         db_service.update_analysis(analysis_id, {
             "strategy_analysis": strategy_analysis.model_dump(),
@@ -108,7 +111,7 @@ async def run_analysis_pipeline(analysis_id: str, company_name: str, years: List
 
         # Step 7: Management Outlook
         await asyncio.sleep(0.1)
-        management_outlook = chains.run_management_outlook(company_name, context)
+        management_outlook = await asyncio.to_thread(chains.run_management_outlook, company_name, context)
 
         db_service.update_analysis(analysis_id, {
             "management_outlook": management_outlook.model_dump(),
@@ -121,7 +124,7 @@ async def run_analysis_pipeline(analysis_id: str, company_name: str, years: List
         if years and len(years) > 1:
             await asyncio.sleep(0.1)
             periods = [str(y) for y in sorted(years)]
-            comparison = chains.run_comparison(company_name, periods, context)
+            comparison = await asyncio.to_thread(chains.run_comparison, company_name, periods, context)
             comparison_analysis = comparison.model_dump()
             db_service.update_analysis(analysis_id, {
                 "comparison_analysis": comparison_analysis
@@ -129,7 +132,8 @@ async def run_analysis_pipeline(analysis_id: str, company_name: str, years: List
 
         # Step 9: Report Synthesis
         await asyncio.sleep(0.1)
-        report = chains.synthesize_report(
+        report = await asyncio.to_thread(
+            chains.synthesize_report,
             company=company_name,
             company_analysis=company_analysis,
             financial_analysis=financial_analysis,

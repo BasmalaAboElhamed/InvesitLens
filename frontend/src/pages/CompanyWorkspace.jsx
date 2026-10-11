@@ -46,6 +46,24 @@ const CompanyWorkspace = () => {
     fetchCompanyData();
   }, [fetchCompanyData]);
 
+  // While an analysis is running, quietly refresh its status every few seconds
+  // so the Financials / Trends / Risk Intel pages fill in by themselves.
+  useEffect(() => {
+    const inProgress = analyses.some(a =>
+      ['uploading', 'processing', 'indexing', 'analyzing'].includes(a.status)
+    );
+    if (!inProgress) return undefined;
+
+    const timer = setTimeout(async () => {
+      try {
+        setAnalyses(await analysisService.getCompanyAnalyses(companyId));
+      } catch (error) {
+        console.error('Failed to refresh analysis status', error);
+      }
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [analyses, companyId]);
+
   const handleStartAnalysis = async () => {
     if (documents.length === 0) {
       alert('Please upload at least one document before running analysis.');
@@ -55,7 +73,6 @@ const CompanyWorkspace = () => {
       setAnalysisRunning(true);
       const newAnalysis = await analysisService.startAnalysis(companyId);
       setAnalyses(prev => [...prev, newAnalysis]);
-      setTimeout(fetchCompanyData, 5000);
     } catch (error) {
       console.error('Failed to start analysis', error);
       alert('Failed to start analysis: ' + (error.response?.data?.detail || error.message));
@@ -96,36 +113,40 @@ const CompanyWorkspace = () => {
     );
   }
 
+  // Absolute paths: relative links resolve against the current sub-page inside
+  // this splat route (/company/:id/*), which broke navigation between sections.
+  const base = `/company/${companyId}`;
+
   const navItems = [
     {
-      to: '', id: 'overview', icon: <Activity size={17} />, label: 'Overview',
+      to: base, id: 'overview', icon: <Activity size={17} />, label: 'Overview',
       active: activeTab === 'overview',
       group: null,
     },
     {
-      to: 'documents', id: 'documents', icon: <FileText size={17} />,
+      to: `${base}/documents`, id: 'documents', icon: <FileText size={17} />,
       label: `Documents`,
       badge: documents.length > 0 ? documents.length : null,
       active: activeTab === 'documents',
       group: null,
     },
     {
-      to: 'financials', id: 'financials', icon: <BarChart2 size={17} />, label: 'Financials',
+      to: `${base}/financials`, id: 'financials', icon: <BarChart2 size={17} />, label: 'Financials',
       active: activeTab === 'financials',
       group: 'Analysis',
     },
     {
-      to: 'trends', id: 'trends', icon: <TrendingUp size={17} />, label: 'Trends',
+      to: `${base}/trends`, id: 'trends', icon: <TrendingUp size={17} />, label: 'Trends',
       active: activeTab === 'trends',
       group: 'Analysis',
     },
     {
-      to: 'risks', id: 'risks', icon: <AlertTriangle size={17} />, label: 'Risk Intel',
+      to: `${base}/risks`, id: 'risks', icon: <AlertTriangle size={17} />, label: 'Risk Intel',
       active: activeTab === 'risks',
       group: 'Analysis',
     },
     {
-      to: 'chat', id: 'chat', icon: <MessageSquare size={17} />, label: 'AI Assistant',
+      to: `${base}/chat`, id: 'chat', icon: <MessageSquare size={17} />, label: 'AI Assistant',
       active: activeTab === 'chat',
       group: 'Interactive',
     },

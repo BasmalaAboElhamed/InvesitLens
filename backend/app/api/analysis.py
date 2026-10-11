@@ -47,6 +47,20 @@ async def start_analysis(
     if not docs:
         raise HTTPException(status_code=400, detail="Company has no uploaded documents to analyze")
         
+    # Documents are indexed in the background; analysing before that finishes
+    # finds no chunks and the run fails immediately.
+    if not any(doc.status == "indexed" for doc in docs):
+        raise HTTPException(
+            status_code=400,
+            detail="Documents are still being indexed. Wait until the document status is 'indexed', then start the analysis."
+        )
+
+    # Never run two pipelines for the same company at once: both would hit the
+    # local Ollama model together and make every request much slower.
+    for existing in db_service.get_analyses_for_company(company_id):
+        if existing.status in (AnalysisStatus.PROCESSING, AnalysisStatus.ANALYZING):
+            return existing
+
     # Create analysis record
     analysis = Analysis(
         company_id=company.id,

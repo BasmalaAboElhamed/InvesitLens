@@ -15,12 +15,14 @@ from app.rag.preprocessing import clean_text, remove_repeated_headers_footers
 from app.rag.chunking import chunk_document
 from app.rag import vectorstore
 
+HASH_READ_BLOCK_SIZE = 8192  # bytes read at a time when hashing a file
+
 
 def compute_file_hash(file_path: str) -> str:
     """Compute SHA-256 hash of a file for duplicate detection."""
     sha256 = hashlib.sha256()
     with open(file_path, "rb") as f:
-        for block in iter(lambda: f.read(8192), b""):
+        for block in iter(lambda: f.read(HASH_READ_BLOCK_SIZE), b""):
             sha256.update(block)
     return sha256.hexdigest()
 
@@ -29,16 +31,16 @@ def extract_pdf_pages(file_path: str) -> List[Dict[str, Any]]:
     """
     Extract text from each page of a PDF using PyMuPDF.
 
-    Returns list of dicts: {page: int, text: str}
+    Returns list of dicts: {page: int, text: str}  (page numbers start at 1)
     """
     pages = []
     try:
         doc = fitz.open(file_path)
-        for page_num in range(len(doc)):
-            page = doc.load_page(page_num)
+        for page_index in range(len(doc)):
+            page = doc.load_page(page_index)
             text = page.get_text("text")
             pages.append({
-                "page": page_num + 1,
+                "page": page_index + 1,
                 "text": text,
             })
         doc.close()
@@ -48,6 +50,45 @@ def extract_pdf_pages(file_path: str) -> List[Dict[str, Any]]:
         raise
 
     return pages
+
+
+def _clean_pages(
+    raw_pages: List[Dict[str, Any]],
+    company: str,
+    year: Optional[int],
+    document_name: str,
+    document_type: str,
+) -> List[Dict[str, Any]]:
+    """
+    Clean every page's text and attach the document metadata.
+    Pages that end up empty are dropped.
+    """
+    # First remove headers/footers that repeat across pages, then clean each page
+    page_texts = [page["text"] for page in raw_pages]
+    texts_without_headers = remove_repeated_headers_footers(page_texts)
+
+    cleaned_pages = []
+    for index, page_data in enumerate(raw_pages):
+        text_to_clean = (
+            texts_without_headers[index]
+            if index < len(texts_without_headers)
+            else page_data["text"]
+        )
+        cleaned_text = clean_text(text_to_clean)
+
+        if cleaned_text.strip():
+            cleaned_pages.append({
+                "text": cleaned_text,
+                "page": page_data["page"],
+                "metadata": {
+                    "company": company,
+                    "year": year or 0,
+                    "document_name": document_name,
+                    "document_type": document_type,
+                },
+            })
+
+    return cleaned_pages
 
 
 def ingest_document(
@@ -78,24 +119,13 @@ def ingest_document(
         raise ValueError(f"No text extracted from: {file_path}")
 
     # Step 3: Clean text & remove repeated headers/footers
-    page_texts = [p["text"] for p in raw_pages]
-    cleaned_texts = remove_repeated_headers_footers(page_texts)
-
-    cleaned_pages = []
-    for i, page_data in enumerate(raw_pages):
-        cleaned_text_content = clean_text(cleaned_texts[i] if i < len(cleaned_texts) else page_data["text"])
-        if cleaned_text_content.strip():
-            cleaned_pages.append({
-                "text": cleaned_text_content,
-                "page": page_data["page"],
-                "metadata": {
-                    "company": company,
-                    "year": year or 0,
-                    "document_name": document_name or Path(file_path).stem,
-                    "document_type": document_type,
-                },
-            })
-
+    cleaned_pages = _clean_pages(
+        raw_pages,
+        company=company,
+        year=year,
+        document_name=document_name or Path(file_path).stem,
+        document_type=document_type,
+    )
     logger.info(f"Cleaned {len(cleaned_pages)} pages (from {page_count} raw)")
 
     # Step 4: Chunk documents
@@ -122,6 +152,9 @@ def ingest_directory(
 ) -> List[Dict[str, Any]]:
     """
     Ingest all PDF files in a directory.
+
+    A failure on one file is recorded as {"filename", "error"} and does not
+    stop the remaining files.
 
     Returns list of ingestion results.
     """

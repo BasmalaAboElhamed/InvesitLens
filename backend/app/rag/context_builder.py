@@ -7,6 +7,10 @@ for LLM prompts, making citations easier and improving grounding.
 
 from typing import List, Dict, Any
 
+NO_EVIDENCE_MESSAGE = "No relevant evidence was found in the documents."
+SOURCE_SEPARATOR = "\n\n---\n\n"
+SOURCE_PREVIEW_LENGTH = 300  # Max characters of chunk text sent to the frontend
+
 
 def build_context(results: List[Dict[str, Any]]) -> str:
     """
@@ -23,21 +27,28 @@ def build_context(results: List[Dict[str, Any]]) -> str:
         ...
     """
     if not results:
-        return "No relevant evidence was found in the documents."
+        return NO_EVIDENCE_MESSAGE
 
-    context_parts = []
+    source_blocks = [
+        _format_source_block(number, result)
+        for number, result in enumerate(results, 1)
+    ]
 
-    for i, result in enumerate(results, 1):
-        metadata = result.get("metadata", {})
-        text = result.get("text", "")
+    return SOURCE_SEPARATOR.join(source_blocks)
 
-        doc_name = metadata.get("document_name", "Unknown Document")
-        page = metadata.get("page", "N/A")
-        section = metadata.get("section", "General")
-        company = metadata.get("company", "")
-        year = metadata.get("year", "")
 
-        source_block = f"""[Source {i}]
+def _format_source_block(number: int, result: Dict[str, Any]) -> str:
+    """Format one retrieved chunk as a numbered "[Source N]" block."""
+    metadata = result.get("metadata", {})
+    text = result.get("text", "")
+
+    doc_name = metadata.get("document_name", "Unknown Document")
+    page = metadata.get("page", "N/A")
+    section = metadata.get("section", "General")
+    company = metadata.get("company", "")
+    year = metadata.get("year", "")
+
+    return f"""[Source {number}]
 Document: {doc_name}
 Company: {company}
 Year: {year}
@@ -46,10 +57,6 @@ Section: {section}
 
 Relevant Text:
 {text}"""
-
-        context_parts.append(source_block)
-
-    return "\n\n---\n\n".join(context_parts)
 
 
 def extract_sources(results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -68,7 +75,7 @@ def extract_sources(results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             "section": metadata.get("section", "General"),
             "company": metadata.get("company", ""),
             "year": metadata.get("year"),
-            "text": result.get("text", "")[:300],  # Preview only
+            "text": result.get("text", "")[:SOURCE_PREVIEW_LENGTH],  # Preview only
             "score": result.get("score"),
         })
 
